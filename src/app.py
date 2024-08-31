@@ -75,7 +75,7 @@ def get_all_user_favorites():
 
     try:
         user = User.query.get(1)
-        user_favorites = [person_favorite.serialize() for person_favorite in user.favorites]
+        user_favorites = [person.serialize() for person in user.person_favorites]
     except:
         error = 'Failed to fetch people'        
 
