@@ -174,11 +174,7 @@ def delete_planet_favorite(planet_id):
     error = None
     seriliazed_deleted_planet_favorite = None
     try:
-        planet_favorite = db.session.execute(
-            db.select(PlanetFavorite)
-                .where(PlanetFavorite.user_id == 1, PlanetFavorite.
-                        == planet_id)
-        ).scalar_one()
+        planet_favorite = db.session.execute(db.select(PlanetFavorite).where(PlanetFavorite.user_id == 1, PlanetFavorite.planet_id== planet_id)).scalar_one()
         db.session.delete(planet_favorite)
         db.session.commit()
         seriliazed_deleted_planet_favorite = planet_favorite.serialize()
