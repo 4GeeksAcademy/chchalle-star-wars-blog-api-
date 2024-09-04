@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, Person, PersonFavorite
+from models import db, User, Person,Planet, PersonFavorite, PlanetFavorite
 #from models import Person
 
 app = Flask(__name__)
@@ -37,13 +37,26 @@ def sitemap():
     return generate_sitemap(app)
 
 @app.route('/user', methods=['GET'])
-def handle_hello():
+def get_all_users():
+
+    error = None
+    serialized_users = None
+
+    try:
+        users = User.query.all()
+        serialized_users = [user.serialize() for user in users]
+        # print(data)
+        
+    except:
+        error = 'Failed to fetch people'        
 
     response_body = {
-        "msg": "Hello, this is your GET /user response "
+        "data": serialized_users,
+        "error": error,
     }
+    status_code = 200 if not error else 500
 
-    return jsonify(response_body), 200
+    return jsonify(response_body), status_code
 
 @app.route('/people', methods=['GET'])
 def get_all_people():
@@ -112,6 +125,74 @@ def delete_person_favorite(person_id):
 
     return jsonify(response_body), status_code
 
+@app.route('/planets', methods=['GET'])
+def get_all_planets():
+
+    error = None
+    serialized_planets = None
+
+    try:
+        planets = Planet.query.all()
+        serialized_planets = [planets.serialize() for planet in planets]
+        # print(data)
+        
+    except:
+        error = 'Failed to fetch planets'        
+
+    response_body = {
+        "data": serialized_planets,
+        "error": error,
+    }
+    status_code = 200 if not error else 500
+
+    return jsonify(response_body), status_code
+
+@app.route('/favorite/planets/<int:planet_id>', methods=['POST'])
+def create_planet_favorite(planet_id):
+    error = None
+    seriliazed_created_planet_favorite = None
+
+    try:
+        user = db.session.execute(db.select(User).where(User.email == "elvis@gmail.com")).scalar_one()
+        created_planet_favorite = PlanetFavorite(user_id=user.id, planet_id=planet_id)
+        db.session.add(created_planet_favorite)
+        db.session.commit()
+        seriliazed_created_planet_favorite = created_planet_favorite.serialize()
+    except:
+        error = 'Failed to create planet favorite'        
+
+    response_body = {
+        "data": seriliazed_created_planet_favorite,
+        "error": error,
+    }
+    status_code = 200 if not error else 500
+
+    return jsonify(response_body), status_code
+
+@app.route('/favorite/planets/<int:planet_id>', methods=['DELETE'])
+def delete_planet_favorite(planet_id):
+    error = None
+    seriliazed_deleted_planet_favorite = None
+    try:
+        planet_favorite = db.session.execute(
+            db.select(PlanetFavorite)
+                .where(PlanetFavorite.user_id == 1, PlanetFavorite.
+                        == planet_id)
+        ).scalar_one()
+        db.session.delete(planet_favorite)
+        db.session.commit()
+        seriliazed_deleted_planet_favorite = planet_favorite.serialize()
+    except:
+        error = 'Failed to delete planet favorite'        
+
+    response_body = {
+        "data": seriliazed_deleted_planet_favorite,
+        "error": error,
+    }
+    status_code = 200 if not error else 500
+
+    return jsonify(response_body), status_code
+
 @app.route('/users/favorites', methods=['GET'])
 def get_all_user_favorites():
 
@@ -121,7 +202,7 @@ def get_all_user_favorites():
     try:
         # user = User.query.get(1)
         user = db.session.execute(db.select(User).where(User.email == "elvis@gmail.com")).scalar_one()
-        user_favorites = [person.serialize() for person in user.person_favorites]
+        user_favorites = [person.serialize() for person in user.person_favorites],[planet.serialize() for planet in user.planet_favorites]
     except:
         error = 'Failed to fetch people'        
 
